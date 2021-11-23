@@ -8,7 +8,7 @@
 
 本仓库包含以下内容：
 
-1. 游戏开发框架([开发文档](https://github.com/RichardLitt/standard-readme/issues/5))。
+1. 游戏开发框架([开发文档](https://github.com/Syan-Lin/GameDemo/blob/master/DevDocument.md))。
 2. 游戏逻辑源码(暂无)。
 3. 游戏资源素材(暂无)。
 4. 游戏说明(暂无)。
