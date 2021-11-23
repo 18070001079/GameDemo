@@ -349,6 +349,14 @@ public class GamePanel extends JPanel implements ActionListener {
 		}
 		updateLists();
 	}
+	public void addObjToList(GameObject obj){
+			if(obj.getIsCollision()){
+				colObj.add(obj);
+			}else{
+				nColObj.add(obj);
+		}
+		updateLists();
+	}
 	
 	//删除物体
 	public void destroy(GameObject obj){
