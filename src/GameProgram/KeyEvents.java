@@ -33,24 +33,8 @@ public class KeyEvents implements KeyListener{
 	@Override
 	public void keyPressed(KeyEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("KeyPressed:" + KeyEvent.getKeyText(e.getKeyCode()));
+		//System.out.println("KeyPressed:" + KeyEvent.getKeyText(e.getKeyCode()));
 		//System.out.println(e.getKeyChar());
-    	if (e.getKeyCode() == KeyEvent.VK_UP) {
-    		GameObject obj = gp.layer_1.get(0);
-    		obj.setPosition(Position.Add(obj.getPosition(), new Position(0, 5)));
-        }
-    	if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-        	GameObject obj = gp.layer_1.get(0);
-    		obj.setPosition(Position.Add(obj.getPosition(), new Position(0, -5)));
-        }
-    	if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-        	GameObject obj = gp.layer_1.get(0);
-    		obj.setPosition(Position.Add(obj.getPosition(), new Position(-5, 0)));
-        }
-    	if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-        	GameObject obj = gp.layer_1.get(0);
-    		obj.setPosition(Position.Add(obj.getPosition(), new Position(5, 0)));
-        }
     	if (e.getKeyCode() == KeyEvent.VK_W) {
     		gp.moveCamera(new Position(0, 20));
         }
@@ -71,7 +55,7 @@ public class KeyEvents implements KeyListener{
 	@Override
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
-		System.out.println("KeyReleased:" + KeyEvent.getKeyText(e.getKeyCode()));
+		//System.out.println("KeyReleased:" + KeyEvent.getKeyText(e.getKeyCode()));
 	}
 
 	/* 

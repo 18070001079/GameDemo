@@ -9,6 +9,7 @@ import GameFrame.CollisionBox;
 import GameFrame.GameObject;
 import GameFrame.ImageContainer;
 import GameFrame.ImageSeries;
+import GameFrame.PhysicalController;
 import GameFrame.Position;
 import GameFrame.Type;
 
@@ -32,10 +33,8 @@ public class GamePanel extends JPanel implements ActionListener {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	//非碰撞体列表
-	protected ArrayList<GameObject> nColObj = new ArrayList<GameObject>();
-	//碰撞体列表
-	protected ArrayList<GameObject> colObj = new ArrayList<GameObject>();
+	//所有对象列表
+	protected ArrayList<GameObject> allObjs = new ArrayList<GameObject>();
 	
 	//图层列表,优先级最高为4
 	protected ArrayList<GameObject> layer_0 = new ArrayList<GameObject>();
@@ -68,25 +67,51 @@ public class GamePanel extends JPanel implements ActionListener {
 		//每次新建对象都要添加进该队列
 		ArrayList<GameObject> goList = new ArrayList<GameObject>();
 		for(int i = 0; i < 3; i++){
-			GameObject bg = new GameObject("背景", new Position(i*1280,0), Type.Backgroud);
+			GameObject bg = new GameObject("背景"+Integer.toString(i), new Position(i*1280,0), Type.Backgroud);
 			bg.setStaticImage("./res/img/bg.jpg", 1280, 720);
-			bg.setIsCollision(true);
+			bg.setIsCollision(false);
 			goList.add(bg);
 		}
 		
-		
-		GameObject moveItem = new GameObject("物体1", new Position(50,50), Type.Item);
+		GameObject moveItem = new GameObject("物体1", new Position(300,500), Type.Item);
 		moveItem.setLayerLevel(1);
 		moveItem.setIsCollision(true);
-		moveItem.setStaticImage("./res/img/2.jpg", 300, 300);
+		moveItem.setStaticImage("./res/img/2.jpg", 50, 50);
+		moveItem.createPhysis();
+		moveItem.getPhysicalController().setIsStatic(false);
+		moveItem.getPhysicalController().setBounceFactor(1.0f);
+		moveItem.getPhysicalController().setIsGravity(true);
 		goList.add(moveItem);
 		
-		GameObject grass = new GameObject("草地", new Position(200,300), Type.Item);
+		GameObject moveItem2 = new GameObject("物体2", new Position(500,500), Type.Item);
+		moveItem2.setLayerLevel(1);
+		moveItem2.setIsCollision(true);
+		moveItem2.setStaticImage("./res/img/2.jpg", 50, 50);
+		moveItem2.createPhysis();
+		moveItem2.getPhysicalController().setIsStatic(false);
+		moveItem2.getPhysicalController().setBounceFactor(0.0f);
+		moveItem2.getPhysicalController().setIsGravity(true);
+		goList.add(moveItem2);
+		
+		GameObject moveItem3 = new GameObject("物体3", new Position(700,500), Type.Item);
+		moveItem3.setLayerLevel(1);
+		moveItem3.setIsCollision(true);
+		moveItem3.setStaticImage("./res/img/2.jpg", 50, 50);
+		moveItem3.createPhysis();
+		moveItem3.getPhysicalController().setIsStatic(false);
+		moveItem3.getPhysicalController().setBounceFactor(0.5f);
+		moveItem3.getPhysicalController().setIsGravity(true);
+		goList.add(moveItem3);
+		
+		GameObject grass = new GameObject("草地", new Position(150,0), Type.Item);
 		grass.setStaticImage("./res/img/grass.jpg", 1000, 150);
 		grass.setLayerLevel(1);
-		goList.add(grass);
+		grass.setIsCollision(true);
+		grass.createPhysis();
 		
-		for(int i = 0; i < 500; i++){
+		goList.add(grass);
+		/*
+		for(int i = 0; i < 1; i++){
 			GameObject anim = new GameObject("动画测试" + Integer.toString(i), new Position(i*50,0), Type.Player);
 			anim.setImgSize(200, 200);
 			anim.setLayerLevel(2);
@@ -99,10 +124,11 @@ public class GamePanel extends JPanel implements ActionListener {
 			anim.getImageContainer().getAnim("站立动画").setPlayInterval(5);
 			goList.add(anim);
 		}
-		
+		*/
 		//将生成对象添加至对象列表，否则不参与程序执行
 		addObjToList(goList);
-		
+		destroy("背景1");
+		debugInfo();
 	}
 	
 	//绘制图像，不要在里面做数据更新
@@ -179,7 +205,7 @@ public class GamePanel extends JPanel implements ActionListener {
 							}
 						}
 					}else{
-						System.out.println(obj.getName() + ":所需的动画资源不存在(" + animName + ")");
+						System.out.println("<" + obj.getName() + ">所需的动画资源不存在(" + animName + ")");
 					}
 					
 				}
@@ -196,9 +222,82 @@ public class GamePanel extends JPanel implements ActionListener {
 		//layer_1.get(0).setPosition(Position.Add(layer_1.get(0).getPosition(), new Position(0, -2)));
 		
 		
-		
+		physisLoop();
 		//——————————————//
 		timer.start();
+	}
+	
+	//物理相关数据更新
+	public void physisLoop(){
+		gravityUpdate();
+		collisionDetection();
+		velocityUpdate();
+	}
+	
+	//重力影响更新
+	public void gravityUpdate(){
+		for(int i = 0; i < allObjs.size(); i++){
+			PhysicalController pc = allObjs.get(i).getPhysicalController();
+			//若物理控件存在则进行物理更新，否则不受影响
+			if(pc != null && pc.getIsGravity()){
+				pc.addVelocity(0 , pc.getGravity());
+			}
+		}
+	}
+	
+	//速度影响更新
+	public void velocityUpdate(){
+		for(int i = 0; i < allObjs.size(); i++){
+			PhysicalController pc = allObjs.get(i).getPhysicalController();
+			//若物理控件存在则进行物理更新，否则不受影响
+			if(pc != null){
+				pc.getVelocity().updatePos();
+			}
+		}
+	}
+	
+	//碰撞检测
+	public void collisionDetection(){
+		ArrayList<GameObject> colList = new ArrayList<GameObject>();
+		for(int i = 0; i < allObjs.size(); i++){
+			if(allObjs.get(i).getIsCollision()){
+				colList.add(allObjs.get(i));
+			}
+		}
+		for(int i = 0; i < colList.size(); i++){
+			for(int j = i + 1; j < colList.size(); j++){
+				//进行碰撞检测的两物体必须都具有物理控件
+				GameObject obj1 = colList.get(i);
+				GameObject obj2 = colList.get(j);
+				if(obj1.getPhysicalController() != null && obj2.getPhysicalController() != null){
+					//如果产生碰撞，则相互产生影响
+					if(CollisionBox.isOnCollision(obj1.getCollisionBox(), obj2.getCollisionBox())){
+						//如果不是静态物体，则产生影响
+						System.out.println("OnCollision");
+						if(!obj1.getPhysicalController().getIsStatic()){
+							System.out.println("<"+obj1.getName()+">Affected");
+							System.out.println("<"+obj1.getName()+">碰撞盒"+obj1.getCollisionBox().toString() + 
+									"<"+obj1.getName()+">碰撞盒"+obj2.getCollisionBox().toString());
+							obj1.getPhysicalController().addVelocity(0, 
+									obj1.getPhysicalController().getVelocity().getVy()*-1
+									- (obj1.getPhysicalController().getBounceFactor() 
+									+ obj2.getPhysicalController().getBounceFactor())
+									* obj1.getPhysicalController().getVelocity().getVy());
+						}
+						if(!obj2.getPhysicalController().getIsStatic()){
+							System.out.println("<"+obj1.getName()+">碰撞盒"+obj1.getCollisionBox().toString() + 
+									"<"+obj1.getName()+">碰撞盒"+obj2.getCollisionBox().toString());
+							obj2.getPhysicalController().addVelocity(0, 
+									obj2.getPhysicalController().getVelocity().getVy()*-1
+									+ (obj1.getPhysicalController().getBounceFactor() 
+									+ obj2.getPhysicalController().getBounceFactor())
+									* obj2.getPhysicalController().getVelocity().getVy());
+						}
+					}
+				}
+				
+			}
+		}
 	}
 	
 	//逻辑坐标到屏幕坐标的映射
@@ -226,87 +325,44 @@ public class GamePanel extends JPanel implements ActionListener {
 		updateList(layer_3);
 		updateList(layer_4);
 		//添加进入视野的物体
-		for(int i = 0; i < nColObj.size(); i++){
+		for(int i = 0; i < allObjs.size(); i++){
 			//摄像机碰撞盒
 			CollisionBox camCb = new CollisionBox(camPos, new Position(camPos.x + 1280, camPos.y + 720));
 			//物体碰撞盒
-			CollisionBox itemCb = new CollisionBox(nColObj.get(i).getPosition(),
-					new Position(nColObj.get(i).getPosition().x + nColObj.get(i).getImgWidth()
-							, nColObj.get(i).getPosition().y + nColObj.get(i).getImgHeight()));
+			CollisionBox itemCb = new CollisionBox(allObjs.get(i).getPosition(),
+					new Position(allObjs.get(i).getPosition().x + allObjs.get(i).getImgWidth()
+							, allObjs.get(i).getPosition().y + allObjs.get(i).getImgHeight()));
 			//如果产生碰撞且图层列表不存在该元素，添加列表
 			if(CollisionBox.isOnCollision(camCb, itemCb)){
-				switch(nColObj.get(i).getLayerLevel()){
+				switch(allObjs.get(i).getLayerLevel()){
 					case 0:
-						if(!isExistInLayer(nColObj.get(i), layer_0)){
-							layer_0.add(nColObj.get(i));
-							System.out.println("添加" + nColObj.get(i).getName());
+						if(!isExistInLayer(allObjs.get(i), layer_0)){
+							layer_0.add(allObjs.get(i));
+							System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 1:
-						if(!isExistInLayer(nColObj.get(i), layer_1)){
-							layer_1.add(nColObj.get(i));
-							System.out.println("添加" + nColObj.get(i).getName());
+						if(!isExistInLayer(allObjs.get(i), layer_1)){
+							layer_1.add(allObjs.get(i));
+							System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 2:
-						if(!isExistInLayer(nColObj.get(i), layer_2)){
-							layer_2.add(nColObj.get(i));
-							System.out.println("添加" + nColObj.get(i).getName());
+						if(!isExistInLayer(allObjs.get(i), layer_2)){
+							layer_2.add(allObjs.get(i));
+							System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 3:
-						if(!isExistInLayer(nColObj.get(i), layer_3)){
-							layer_3.add(nColObj.get(i));
-							System.out.println("添加" + nColObj.get(i).getName());
+						if(!isExistInLayer(allObjs.get(i), layer_3)){
+							layer_3.add(allObjs.get(i));
+							System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 4:
-						if(!isExistInLayer(nColObj.get(i), layer_4)){
-							layer_4.add(nColObj.get(i));
-							System.out.println("添加" + nColObj.get(i).getName());
-						}
-						break;
-				}
-			}
-		}
-		for(int i = 0; i < colObj.size(); i++){
-			//摄像机碰撞盒
-			CollisionBox camCb = new CollisionBox(camPos, new Position(camPos.x + 1280, camPos.y + 720));
-			//物体碰撞盒
-			CollisionBox itemCb = new CollisionBox(colObj.get(i).getPosition(),
-					new Position(colObj.get(i).getPosition().x + colObj.get(i).getImgWidth()
-							, colObj.get(i).getPosition().y + colObj.get(i).getImgHeight()));
-			//如果产生碰撞且图层列表不存在该元素，添加列表
-			if(CollisionBox.isOnCollision(camCb, itemCb)){
-				switch(colObj.get(i).getLayerLevel()){
-					case 0:
-						if(!isExistInLayer(colObj.get(i), layer_0)){
-							layer_0.add(colObj.get(i));
-							System.out.println("添加" + colObj.get(i).getName());
-						}
-						break;
-					case 1:
-						if(!isExistInLayer(colObj.get(i), layer_1)){
-							layer_1.add(colObj.get(i));
-							System.out.println("添加" + colObj.get(i).getName());
-						}
-						break;
-					case 2:
-						if(!isExistInLayer(colObj.get(i), layer_2)){
-							layer_2.add(colObj.get(i));
-							System.out.println("添加" + colObj.get(i).getName());
-						}
-						break;
-					case 3:
-						if(!isExistInLayer(colObj.get(i), layer_3)){
-							layer_3.add(colObj.get(i));
-							System.out.println("添加" + colObj.get(i).getName());
-						}
-						break;
-					case 4:
-						if(!isExistInLayer(colObj.get(i), layer_4)){
-							layer_4.add(colObj.get(i));
-							System.out.println("添加" + colObj.get(i).getName());
+						if(!isExistInLayer(allObjs.get(i), layer_4)){
+							layer_4.add(allObjs.get(i));
+							System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 				}
@@ -341,33 +397,20 @@ public class GamePanel extends JPanel implements ActionListener {
 	//将对象添加至物体队列
 	public void addObjToList(ArrayList<GameObject> list){
 		for(int i = 0; i < list.size(); i++){
-			if(list.get(i).getIsCollision()){
-				colObj.add(list.get(i));
-			}else{
-				nColObj.add(list.get(i));
-			}
+			allObjs.add(list.get(i));
 		}
 		updateLists();
 	}
 	public void addObjToList(GameObject obj){
-		if(obj.getIsCollision()){
-			colObj.add(obj);
-		}else{
-			nColObj.add(obj);
-		}
+		allObjs.add(obj);
 		updateLists();
 	}
 	
 	//删除物体
 	public void destroy(GameObject obj){
-		for(int i = 0; i < colObj.size(); i++){
-			if(obj.equals(colObj.get(i))){
-				colObj.remove(i);
-			}
-		}
-		for(int i = 0; i < nColObj.size(); i++){
-			if(obj.equals(nColObj.get(i))){
-				nColObj.remove(i);
+		for(int i = 0; i < allObjs.size(); i++){
+			if(obj.equals(allObjs.get(i))){
+				allObjs.remove(i);
 			}
 		}
 		for(int i = 0; i < layer_0.size(); i++){
@@ -395,6 +438,48 @@ public class GamePanel extends JPanel implements ActionListener {
 				layer_4.remove(i);
 			}
 		}
+	}
+	public void destroy(String objName){
+		for(int i = 0; i < allObjs.size(); i++){
+			if(allObjs.get(i).getName().equals(objName)){
+				allObjs.remove(i);
+			}
+		}
+		for(int i = 0; i < layer_0.size(); i++){
+			if(layer_0.get(i).getName().equals(objName)){
+				layer_0.remove(i);
+			}
+		}
+		for(int i = 0; i < layer_1.size(); i++){
+			if(layer_1.get(i).getName().equals(objName)){
+				layer_1.remove(i);
+			}
+		}
+		for(int i = 0; i < layer_2.size(); i++){
+			if(layer_2.get(i).getName().equals(objName)){
+				layer_2.remove(i);
+			}
+		}
+		for(int i = 0; i < layer_3.size(); i++){
+			if(layer_3.get(i).getName().equals(objName)){
+				layer_3.remove(i);
+			}
+		}
+		for(int i = 0; i < layer_4.size(); i++){
+			if(layer_4.get(i).getName().equals(objName)){
+				layer_4.remove(i);
+			}
+		}
+	}
+	
+	public void debugInfo(){
+		for(int i = 0; i < allObjs.size(); i++){
+			System.out.println("<" + allObjs.get(i).getName() + ">坐标:" + allObjs.get(i).getPosition().toString());
+			if(allObjs.get(i).getCollisionBox()!=null){
+				System.out.println("<" + allObjs.get(i).getName() + ">碰撞盒:" + allObjs.get(i).getCollisionBox().toString());
+			}
+		}
+		System.out.println("<CamPos>" + camPos.toString());
 	}
 	
 }

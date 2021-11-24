@@ -30,4 +30,10 @@ public class CollisionBox {
 			return true;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return "("+downLeft.x+","+downLeft.y+")("+upRight.x+","+upRight.y+")";
+	}
 }

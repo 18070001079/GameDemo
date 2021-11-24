@@ -36,6 +36,6 @@ public class Position {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return "x:" + this.x + " y:" + this.y;
+		return "("+this.x+","+this.y+")";
 	}
 }

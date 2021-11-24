@@ -30,8 +30,9 @@ public class GameObject {
 	//"无"表示无贴图,"静态贴图"表示播放静态贴图,其他则去ic中寻找相应的动画贴图
 	protected String curAnim;		//当前播放动画	
 	
-	protected ImageContainer ic = null;	//绘图组件
-	protected CollisionBox cb = null;	//碰撞组件
+	protected ImageContainer ic = null;		//绘图组件
+	protected CollisionBox cb = null;		//碰撞组件
+	protected PhysicalController pc = null;	//物理控件
 	
 	public GameObject(String name, Position pos, Type type){
 		this.name = name;
@@ -45,9 +46,20 @@ public class GameObject {
 		this.imgWidth = 100;
 	}
 	
+	public void createPhysis(){
+		//如果碰撞盒未初始化
+		if(cb == null){
+			cb = new CollisionBox(pos, new Position(pos.x + imgWidth, pos.y + imgHeight));
+		}
+		pc = new PhysicalController(cb, this);
+	}
+	
 	//设置碰撞盒
 	public void setCollisionBox(CollisionBox cb){
 		this.cb = cb;
+		//如果已有物理控件，则同步更新物理控件
+		if(pc != null)
+			pc.setCb(cb);
 	}
 	public CollisionBox getCollisionBox(){
 		return cb;
@@ -79,7 +91,7 @@ public class GameObject {
 			ic.getAnim(animName).curFrame = 0;
 		}
 		else{
-			System.out.println(name + ":所需的动画资源不存在(" + animName + ")");
+			System.out.println("<" + name + ">所需的动画资源不存在(" + animName + ")");
 		}
 	}
 	
@@ -111,6 +123,10 @@ public class GameObject {
 	}
 	public void setPosition(Position pos){
 		this.pos = pos;
+		if(cb!=null){
+			cb.downLeft = pos;
+			cb.upRight = Position.Add(pos, Position.Minus(cb.upRight, cb.downLeft));
+		}
 	}
 	public Position getPosition(){
 		return pos;
@@ -136,5 +152,8 @@ public class GameObject {
 	}
 	public void setIsCollision(boolean isCollision){
 		this.isCollision = isCollision;
+	}
+	public PhysicalController getPhysicalController(){
+		return pc;
 	}
 }
