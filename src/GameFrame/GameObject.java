@@ -124,8 +124,9 @@ public class GameObject {
 	public void setPosition(Position pos){
 		this.pos = pos;
 		if(cb!=null){
+			Position offset = Position.Minus(cb.upRight, cb.downLeft);
 			cb.downLeft = pos;
-			cb.upRight = Position.Add(pos, Position.Minus(cb.upRight, cb.downLeft));
+			cb.upRight = Position.Add(pos, offset);
 		}
 	}
 	public Position getPosition(){

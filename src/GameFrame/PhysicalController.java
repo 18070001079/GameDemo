@@ -17,7 +17,7 @@ public class PhysicalController {
 	protected GameObject go;
 	protected CollisionBox cb;
 	protected boolean isGravity = false;//是否受重力影响
-	protected float gravity = -9.8f;	//负数向下加速
+	protected float gravity = -100f;	//负数向下加速
 	protected float bounceFactor = 0.0f;//弹力系数，不能超过1，0表示无弹力
 	protected boolean isStatic = true;	//是否是静态物体
 	
@@ -35,8 +35,8 @@ public class PhysicalController {
 		velocity.vy = vy;
 	}
 	public void addVelocity(float vx, float vy){
-		velocity.vx += vx;
-		velocity.vy += vy;
+		velocity.vx = velocity.vx+ vx;
+		velocity.vy = velocity.vy+ vy;
 	}
 	public boolean getIsGravity() {
 		return isGravity;

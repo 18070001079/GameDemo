@@ -24,7 +24,8 @@ public class Velocity {
 	//根据速度更新对象坐标
 	public void updatePos(){
 		Position offset = new Position(vx/50.0f, vy/50.0f);
-		go.setPosition(Position.Add(offset, go.getPosition()));
+		if(Math.sqrt(offset.x*offset.x+offset.y*offset.y) > 0.5f)
+			go.setPosition(Position.Add(offset, go.getPosition()));
 	}
 
 	public float getVx() {
@@ -42,6 +43,10 @@ public class Velocity {
 	public void setVy(float vy) {
 		this.vy = vy;
 	}
-	
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return "("+this.vx+","+this.vy+")";
+	}
 
 }

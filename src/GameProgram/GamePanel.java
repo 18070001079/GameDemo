@@ -80,7 +80,7 @@ public class GamePanel extends JPanel implements ActionListener {
 		moveItem.createPhysis();
 		moveItem.getPhysicalController().setIsStatic(false);
 		moveItem.getPhysicalController().setBounceFactor(1.0f);
-		moveItem.getPhysicalController().setIsGravity(true);
+		moveItem.getPhysicalController().setIsGravity(false);
 		goList.add(moveItem);
 		
 		GameObject moveItem2 = new GameObject("物体2", new Position(500,500), Type.Item);
@@ -90,7 +90,8 @@ public class GamePanel extends JPanel implements ActionListener {
 		moveItem2.createPhysis();
 		moveItem2.getPhysicalController().setIsStatic(false);
 		moveItem2.getPhysicalController().setBounceFactor(0.0f);
-		moveItem2.getPhysicalController().setIsGravity(true);
+		moveItem2.getPhysicalController().setIsGravity(false);
+		moveItem2.getPhysicalController().setVelocity(200.0f, 0.0f);
 		goList.add(moveItem2);
 		
 		GameObject moveItem3 = new GameObject("物体3", new Position(700,500), Type.Item);
@@ -100,7 +101,7 @@ public class GamePanel extends JPanel implements ActionListener {
 		moveItem3.createPhysis();
 		moveItem3.getPhysicalController().setIsStatic(false);
 		moveItem3.getPhysicalController().setBounceFactor(0.5f);
-		moveItem3.getPhysicalController().setIsGravity(true);
+		moveItem3.getPhysicalController().setIsGravity(false);
 		goList.add(moveItem3);
 		
 		GameObject grass = new GameObject("草地", new Position(150,0), Type.Item);
@@ -269,35 +270,144 @@ public class GamePanel extends JPanel implements ActionListener {
 				//进行碰撞检测的两物体必须都具有物理控件
 				GameObject obj1 = colList.get(i);
 				GameObject obj2 = colList.get(j);
-				if(obj1.getPhysicalController() != null && obj2.getPhysicalController() != null){
+				PhysicalController pc1 = obj1.getPhysicalController();
+				PhysicalController pc2 = obj2.getPhysicalController();
+				if(pc1 != null && pc2 != null){
 					//如果产生碰撞，则相互产生影响
-					if(CollisionBox.isOnCollision(obj1.getCollisionBox(), obj2.getCollisionBox())){
+					CollisionBox cb1 = obj1.getCollisionBox();
+					CollisionBox cb2 = obj2.getCollisionBox();
+					if(CollisionBox.isOnCollision(cb1, cb2)){
 						//如果不是静态物体，则产生影响
-						System.out.println("OnCollision");
-						if(!obj1.getPhysicalController().getIsStatic()){
-							System.out.println("<"+obj1.getName()+">Affected");
-							System.out.println("<"+obj1.getName()+">碰撞盒"+obj1.getCollisionBox().toString() + 
-									"<"+obj1.getName()+">碰撞盒"+obj2.getCollisionBox().toString());
-							obj1.getPhysicalController().addVelocity(0, 
-									obj1.getPhysicalController().getVelocity().getVy()*-1
-									- (obj1.getPhysicalController().getBounceFactor() 
-									+ obj2.getPhysicalController().getBounceFactor())
-									* obj1.getPhysicalController().getVelocity().getVy());
+						System.out.println("<"+obj1.getName()+">"+"<"+obj2.getName()+">OnCollision");
+						int dir = collideDir(cb1, cb2);
+						
+						if(!pc1.getIsStatic()){
+							calVel(obj1,obj2);
 						}
-						if(!obj2.getPhysicalController().getIsStatic()){
-							System.out.println("<"+obj1.getName()+">碰撞盒"+obj1.getCollisionBox().toString() + 
-									"<"+obj1.getName()+">碰撞盒"+obj2.getCollisionBox().toString());
-							obj2.getPhysicalController().addVelocity(0, 
-									obj2.getPhysicalController().getVelocity().getVy()*-1
-									+ (obj1.getPhysicalController().getBounceFactor() 
-									+ obj2.getPhysicalController().getBounceFactor())
-									* obj2.getPhysicalController().getVelocity().getVy());
+						if(!pc2.getIsStatic()){
+							calVel(obj2,obj1);
 						}
+						separateObj(obj1, obj2, dir);
 					}
 				}
 				
 			}
 		}
+	}
+	
+	public void calVel(GameObject obj1, GameObject obj2){
+		PhysicalController pc1 = obj1.getPhysicalController();
+		PhysicalController pc2 = obj2.getPhysicalController();
+		CollisionBox cb1 = obj1.getCollisionBox();
+		CollisionBox cb2 = obj2.getCollisionBox();
+		int dir = collideDir(cb1, cb2);
+		if(!pc1.getIsStatic()){
+			//System.out.println("<"+obj1.getName()+">Velocity:"+pc1.getVelocity().toString());
+			switch(dir){
+				case 1:
+					break;
+				case 2:
+					System.out.println("2");
+					pc1.addVelocity(0, 
+							-1*(pc1.getVelocity().getVy()-pc1.getGravity())
+							-(pc1.getBounceFactor()+pc2.getBounceFactor())
+							*(pc1.getVelocity().getVy()+pc2.getVelocity().getVy()));
+					break;
+				case 3:
+					break;
+				case 4:
+					System.out.println("4");
+					pc1.setVelocity(-(pc1.getVelocity().getVx()+pc2.getVelocity().getVx())
+							*(pc1.getBounceFactor()+pc2.getBounceFactor()), 
+							pc1.getVelocity().getVy());
+					break;
+				case 5:
+					break;
+				case 6:
+					System.out.println("6");
+					pc1.setVelocity(pc1.getVelocity().getVx(), 
+							-(pc1.getVelocity().getVy()+pc2.getVelocity().getVy())
+							*(pc1.getBounceFactor()+pc2.getBounceFactor()));
+					break;
+				case 7:
+					break;
+				case 8:
+					System.out.println("8");
+					pc1.setVelocity(-(pc1.getVelocity().getVx()+pc2.getVelocity().getVx())
+							*(pc1.getBounceFactor()+pc2.getBounceFactor()), 
+							pc1.getVelocity().getVy());
+					break;
+			}
+			//System.out.println("<"+obj1.getName()+">VelocityA:"+pc1.getVelocity().toString());
+		}
+	}
+	
+	//将物体与被撞体分离
+	public void separateObj(GameObject obj1, GameObject obj2, int dir){
+		CollisionBox cb1 = obj1.getCollisionBox();
+		CollisionBox cb2 = obj2.getCollisionBox();
+		Position p1 = obj1.getPosition();
+		switch(dir){
+		case 0:
+			//System.out.println("无碰撞产生");
+			break;
+		case 1:
+			break;
+		case 2:
+			obj1.setPosition(new Position(p1.x, p1.y+cb2.upRight.y-cb1.downLeft.y));
+			break;
+		case 3:
+			break;
+		case 4:
+			obj1.setPosition(new Position(p1.x+cb2.upRight.x-cb1.downLeft.x, p1.y));
+			break;
+		case 5:
+			break;
+		case 6:
+			obj1.setPosition(new Position(p1.x, p1.y-cb1.upRight.y+cb2.downLeft.y));
+			break;
+		case 7:
+			break;
+		case 8:
+			obj1.setPosition(new Position(p1.x-cb1.upRight.x+cb2.downLeft.x, p1.y));
+			break;
+		default:
+			System.out.println("碰撞检测出错！");
+			break;
+		}
+	}
+	
+	//计算产生碰撞时，碰撞的方向
+	public int collideDir(CollisionBox cb1, CollisionBox cb2){
+		Position center1 = Position.GetCenter(cb1.downLeft, cb1.upRight);
+		Position center2 = Position.GetCenter(cb2.downLeft, cb2.upRight);
+		
+		if(!CollisionBox.isOnCollision(cb1, cb2)){
+			return 0;
+		}
+		
+		if(center1.x < cb2.downLeft.x){
+			if(center2.y < cb1.downLeft.y){
+				return 1;
+			}else if(center2.y > cb1.upRight.y){
+				return 7;
+			}
+			return 8;
+		}else if(center1.x > cb2.upRight.x){
+			if(center2.y < cb1.downLeft.y){
+				return 3;
+			}else if(center2.y > cb1.upRight.y){
+				return 5;
+			}
+			return 4;
+		}else if(center1.y > cb2.upRight.y){
+			return 2;
+		}else if(center1.y < cb2.downLeft.y){
+			return 6;
+		}
+		
+		//异常
+		return -1;
 	}
 	
 	//逻辑坐标到屏幕坐标的映射
@@ -338,31 +448,31 @@ public class GamePanel extends JPanel implements ActionListener {
 					case 0:
 						if(!isExistInLayer(allObjs.get(i), layer_0)){
 							layer_0.add(allObjs.get(i));
-							System.out.println("添加" + allObjs.get(i).getName());
+							//System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 1:
 						if(!isExistInLayer(allObjs.get(i), layer_1)){
 							layer_1.add(allObjs.get(i));
-							System.out.println("添加" + allObjs.get(i).getName());
+							//System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 2:
 						if(!isExistInLayer(allObjs.get(i), layer_2)){
 							layer_2.add(allObjs.get(i));
-							System.out.println("添加" + allObjs.get(i).getName());
+							//System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 3:
 						if(!isExistInLayer(allObjs.get(i), layer_3)){
 							layer_3.add(allObjs.get(i));
-							System.out.println("添加" + allObjs.get(i).getName());
+							//System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 					case 4:
 						if(!isExistInLayer(allObjs.get(i), layer_4)){
 							layer_4.add(allObjs.get(i));
-							System.out.println("添加" + allObjs.get(i).getName());
+							//System.out.println("添加" + allObjs.get(i).getName());
 						}
 						break;
 				}
@@ -381,7 +491,7 @@ public class GamePanel extends JPanel implements ActionListener {
 							, layerList.get(i).getPosition().y + layerList.get(i).getImgHeight()));
 			//如果不产生碰撞，则说明在视野范围外，从列表中删除
 			if(!CollisionBox.isOnCollision(camCb, itemCb)){
-				System.out.println("删除" + layerList.get(i).getName());
+				//System.out.println("删除" + layerList.get(i).getName());
 				layerList.remove(i);
 			}
 		}
