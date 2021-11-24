@@ -33,7 +33,8 @@
 > | imgHeight     | int     | 渲染高度(单位：像素) |
 > | curAnim     | string     | 当前播放动画 |
 > | ic     | ImageContainer     | 动画播放组件 |
-> | cb     | CollisionBox     | 碰撞盒，物理相关 |
+> | cb     | CollisionBox     | 碰撞盒 |
+> | pc     | PhysicalController | 物理控件 |
 
 > | 成员函数 |说明     |
 > | -------- | -------- |
@@ -41,6 +42,7 @@
 > | setStaticImage | 设置静态贴图，同时将当前播放动画改成静态贴图|
 > | playAnimation   | 设置当前播放的动画 |
 > | isOnCollision   | 基于碰撞盒检测物体间是否发生碰撞 |
+> | createPhysis   | 初始化物理控件 |
 
 ### CollisionBox：碰撞盒
 
@@ -78,6 +80,29 @@
 > | -------- | -------- |
 > | ImageSeries | 根据动画的文件序列生成动画序列 |
 
+### PhysicalController：物理控件
+  
+> | 成员参数 | 字段类型 | 说明     |
+> | -------- | -------- | -------- |
+> | velocity | Velocity | 运动速度 |
+> | go    | GameObject | 所控制的对象实例 |
+> | cb     | CollisionBox | 用于检测的碰撞盒 |
+> | isGravity     | boolean | 是否受重力影响 |
+> | gravity     | float | 重力加速度大小 |
+> | isStatic     | boolean | 是否是静态物体，静态物体不会被其他物体影响 |
+
+> | 成员函数 |说明     |
+> | -------- | -------- |
+> | addVelocity | 基于原本速度加上一个速度 |
+  
+### Velocity：速度类
+  
+> | 成员参数 | 字段类型 | 说明     |
+> | -------- | -------- | -------- |
+> | go    | GameObject | 所控制的对象实例 |
+> | vx     | float | X轴运动速度，单位为像素 |
+> | vx     | float | Y轴运动速度，单位为像素 |
+  
   # 程序运行框架
   
 ### StartGame:负责创建游戏窗口
@@ -86,8 +111,7 @@
   
  > | 成员参数 | 字段类型 | 说明     |
  > | -------- | -------- | -------- |
- > | nColObj | ArrayList<GameObject> | 非碰撞体队列，不参与碰撞检测 |
- > | colObj    | ArrayList<GameObject> | 碰撞体队列，参与碰撞检测 |
+ > | allObjs    | ArrayList<GameObject> | 所有对象的队列 |
  > | layer_x     | ArrayList<GameObject> | 渲染图层，层数越高优先级越高 |
  > | camPos     | Position | 摄像机坐标，左下为原点，默认渲染1280*720坐标范围内的对象 |
 
@@ -95,6 +119,10 @@
  > | -------- | -------- |
  > | init | 只会执行一次，数据初始化及对象创建等在该函数执行 |
  > | paint | 绘图主循环，每秒执行50次，**不要在绘图循环中做数据处理** |
+ > | physisLoop | 物理主循环，每秒执行50次，进行物理计算 |
+ > | gravityUpdate | 进行重力计算 |
+ > | collisionDetection | 进行碰撞检测 |
+ > | velocityUpdate | 进行速度计算 |
  > | actionPerformed | 事件处理循环，在该函数进行数据更新，每秒执行50次 |
  > | moveCamera | 基于摄像机当前位置进行位移 |
  > | setCamera | 设置摄像机到指定位置 |
